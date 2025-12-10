@@ -350,65 +350,47 @@ function renderPorts(data) {
 
     // Render individual ports (excluding those in ranges)
     const portsToRender = data.ports.filter(p => !usedInRange.has(p.port));
-
-    // Render each port with collision detection for connector heights and direction
     const sortedIndividualPorts = [...portsToRender].sort((a, b) => a.port - b.port);
-    const connectorConfig = new Map(); // Track configuration for each port
 
     sortedIndividualPorts.forEach((portInfo, index) => {
         const position = (portInfo.port / roundedMaxPort) * 100;
 
-        let config = { direction: 'down', heightLevel: 0 };
+        // Cycle: Down-Normal, Up-Normal, Down-Tall, Up-Tall
+        const cycleIndex = index % 4;
+        let direction, heightLevel;
 
-        if (index > 0) {
-            const prevPort = sortedIndividualPorts[index - 1];
-            const prevPosition = (prevPort.port / roundedMaxPort) * 100;
-            const distance = Math.abs(position - prevPosition);
-
-            // If extremely close (< 1.5%), point upward
-            if (distance < 1.5) {
-                config.direction = 'up';
-                config.heightLevel = 0; // All upward connectors same height
-            }
-            // If moderately close (< 3%), use different downward heights
-            else if (distance < 3) {
-                const prevConfig = connectorConfig.get(prevPort.port);
-                if (prevConfig.direction === 'down') {
-                    config.heightLevel = (prevConfig.heightLevel + 1) % 3;
-                }
-            }
+        if (cycleIndex === 0) {
+            direction = 'down';
+            heightLevel = 0; // Normal
+        } else if (cycleIndex === 1) {
+            direction = 'up';
+            heightLevel = 0; // Normal
+        } else if (cycleIndex === 2) {
+            direction = 'down';
+            heightLevel = 1; // Tall
+        } else {
+            direction = 'up';
+            heightLevel = 1; // Tall
         }
-
-        connectorConfig.set(portInfo.port, config);
-    });
-
-    portsToRender.forEach(portInfo => {
-        const position = (portInfo.port / roundedMaxPort) * 100;
-        const config = connectorConfig.get(portInfo.port);
 
         // Calculate connector height and dot position based on level and direction
         let connectorHeight, dotPosition, labelPosition;
 
-        if (config.direction === 'up') {
+        // Define heights
+        const normalHeight = 50;
+        const tallHeight = 100;
+        const currentHeight = heightLevel === 0 ? normalHeight : tallHeight;
+
+        if (direction === 'up') {
             // Upward pointing connector
-            connectorHeight = 50;
-            dotPosition = -50;
-            labelPosition = -70;
+            connectorHeight = currentHeight;
+            dotPosition = -currentHeight;
+            labelPosition = -(currentHeight + 40);
         } else {
-            // Downward pointing connector with varying heights
-            if (config.heightLevel === 0) {
-                connectorHeight = 50;
-                dotPosition = 50;
-                labelPosition = 70;
-            } else if (config.heightLevel === 1) {
-                connectorHeight = 90;
-                dotPosition = 90;
-                labelPosition = 110;
-            } else {
-                connectorHeight = 130;
-                dotPosition = 130;
-                labelPosition = 150;
-            }
+            // Downward pointing connector
+            connectorHeight = currentHeight;
+            dotPosition = currentHeight;
+            labelPosition = currentHeight + 40;
         }
 
         // Create connector line
@@ -427,19 +409,19 @@ function renderPorts(data) {
         if (currentOrientation === 'horizontal') {
             connector.style.left = `${position}%`;
 
-            if (config.direction === 'up') {
+            if (direction === 'up') {
                 // Upward connector - attach to ports-container and point up
-                connector.style.bottom = '100%';
+                connector.style.bottom = '0px'; // Changed from 100% to 0px for centered line
                 connector.style.height = `${connectorHeight}px`;
                 connector.classList.add('connector-up');
 
                 dot.style.left = `${position}%`;
-                dot.style.bottom = `calc(100% + ${connectorHeight}px)`;
-                dot.style.transform = 'translateX(-50%)';
+                dot.style.bottom = `${connectorHeight}px`;
+                dot.style.transform = 'translateX(-50%) translateY(50%)'; // Center vertically on end of line
                 dot.classList.add('horizontal-dot');
 
                 label.style.left = `${position}%`;
-                label.style.bottom = `calc(100% + ${connectorHeight + 20}px)`;
+                label.style.bottom = `${connectorHeight + 15}px`;
                 label.style.transform = 'translateX(-50%)';
             } else {
                 // Downward connector
@@ -448,7 +430,7 @@ function renderPorts(data) {
 
                 dot.style.left = `${position}%`;
                 dot.style.top = `${dotPosition}px`;
-                dot.style.transform = 'translateX(-50%)';
+                dot.style.transform = 'translateX(-50%) translateY(-50%)'; // Center vertically on end of line
                 dot.classList.add('horizontal-dot');
 
                 label.style.left = `${position}%`;
@@ -456,7 +438,7 @@ function renderPorts(data) {
                 label.style.transform = 'translateX(-50%)';
             }
         } else {
-            // Vertical orientation (keep existing logic)
+            // Vertical orientation (keep existing logic but adapt heights)
             connector.style.top = `${position}%`;
             connector.style.left = '0px';
             connector.style.width = `${connectorHeight}px`;

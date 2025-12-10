@@ -97,6 +97,9 @@ type App struct {
 	apiKey       string
 }
 
+// AppVersion is the current version of the application
+const AppVersion = "v1.0.0"
+
 func (a *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFS(templatesFS, "templates/index.html")
 	if err != nil {
@@ -105,7 +108,13 @@ func (a *App) handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	data := struct {
+		Version string
+	}{
+		Version: AppVersion,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Template execution error: %v", err)
 	}
 }

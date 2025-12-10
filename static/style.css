@@ -143,6 +143,8 @@ body {
 /* Horizontal orientation */
 .visualization.horizontal {
     flex-direction: column;
+    justify-content: center;
+    /* Center vertically */
 }
 
 .visualization.horizontal .port-line {
@@ -153,24 +155,37 @@ body {
             var(--line-gradient-mid) 50%,
             var(--line-gradient-end) 100%);
     border-radius: 100px;
-    position: relative;
+    position: absolute;
+    /* Absolute positioning for precise centering */
+    top: 50%;
+    transform: translateY(-50%);
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.4),
         0 0 40px rgba(131, 56, 236, 0.2);
     margin-top: 0px;
+    z-index: 1;
 }
 
 .visualization.horizontal .ports-container {
     width: 90%;
-    height: 180px;
-    position: relative;
+    height: 0;
+    /* Zero height to not affect layout flow */
+    position: absolute;
+    top: 50%;
+    /* Center vertically */
+    overflow: visible;
+    /* Allow connectors to extend up/down */
     margin-top: 0;
+    z-index: 2;
 }
 
 .visualization.horizontal .port-markers {
     width: 90%;
-    height: 30px;
-    position: relative;
-    margin-bottom: 10px;
+    height: 0;
+    position: absolute;
+    top: 50%;
+    margin-top: -20px;
+    /* Offset slightly to sit above the line */
+    z-index: 3;
 }
 
 /* Vertical orientation */
@@ -245,11 +260,11 @@ body {
 }
 
 .port-dot.horizontal-dot {
-    animation: pulse 2s ease-in-out infinite;
+    animation: pulseGlow 2s ease-in-out infinite;
 }
 
 .port-dot.vertical-dot {
-    animation: pulseVertical 2s ease-in-out infinite;
+    animation: pulseGlow 2s ease-in-out infinite;
 }
 
 .port-dot::before {
@@ -327,38 +342,26 @@ body {
     }
 }
 
-@keyframes pulse {
+@keyframes pulseGlow {
 
     0%,
     100% {
-        transform: translateX(-50%) scale(1);
-        opacity: 1;
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.6),
+            0 0 24px rgba(131, 56, 236, 0.3);
     }
 
     50% {
-        transform: translateX(-50%) scale(1.1);
-        opacity: 0.8;
-    }
-}
-
-@keyframes pulseVertical {
-
-    0%,
-    100% {
-        transform: translateY(-50%) scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: translateY(-50%) scale(1.1);
-        opacity: 0.8;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.8),
+            0 0 40px rgba(131, 56, 236, 0.5);
     }
 }
 
 .port-dot:hover {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.8),
-        0 0 40px rgba(131, 56, 236, 0.5);
+    /* Enhance glow on hover, but no movement/scaling */
+    box-shadow: 0 0 25px rgba(0, 212, 255, 1),
+        0 0 50px rgba(131, 56, 236, 0.8);
     animation: none;
+    /* Stop pulsing to show steady active state */
 }
 
 /* Connector lines */
@@ -466,4 +469,16 @@ body {
         flex-direction: column;
         align-items: stretch;
     }
+}
+
+.version-tag {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    opacity: 0.6;
+    z-index: 100;
+    pointer-events: none;
+    font-family: 'Inter', monospace;
 }
